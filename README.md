@@ -1,3 +1,49 @@
+# 🏕️ The Wild Oasis – Cabin Booking App
+
+A modern full-stack cabin booking application built with **Next.js 14**, **React Server Components**, **Tailwind CSS**, **NextAuth (Google)**, **Supabase**, and **Server Actions**.
+
+This project simulates a real-world vacation rental platform where users can view available cabins, select date ranges, and book instantly with Google login.
+
+---
+
+## 🚀 Tech Stack
+
+- **Framework:** Next.js 14 (App Router)
+- **Rendering:** React Server Components (RSC)
+- **Styling:** Tailwind CSS
+- **Authentication:** NextAuth.js (Google Provider)
+- **Database & Backend:** Supabase (PostgreSQL + API)
+- **Data Fetching:** Server Actions + Suspense
+- **Routing:** Dynamic routing with loading states
+
+---
+
+## ✨ Features
+
+- 🔐 Google login via NextAuth
+- 📅 Date selection with real-time validation
+- 💰 Dynamic pricing calculation with discounts
+- 🛠️ Server Actions for secure server-side logic
+- 🧠 React Suspense for async loading and better UX
+- 📱 Fully responsive layout with clean design
+- 🗂️ Dynamic routing for individual cabin pages
+
+---
+
+
+
+## 📦 Installation
+
+```bash
+git clone https://github.com/V3NO-DZ/the-wild-oasis-website-V3NO.git
+cd the-wild-oasis-website-V3NO
+npm install
+
+
+
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
