@@ -28,7 +28,7 @@ export default async function Page(): Promise<React.JSX.Element> {
           name="nationality"
           id="nationality"
           className="px-5 py-3 bg-primary-200 text-gray-600 w-full shadow-sm rounded-sm"
-          defaultCountry={nationality}
+          defaultCountry={nationality || ''}
         />
       </UpdateProfileForm>
     </div>

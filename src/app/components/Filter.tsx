@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 
 // ✅ Reusable Button component
@@ -17,7 +18,7 @@ function FilterButton({ filter, handleFilter, activeFilter, children }: { filter
   );
 }
 
-function Filter(): JSX.Element {
+function Filter(): React.JSX.Element {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

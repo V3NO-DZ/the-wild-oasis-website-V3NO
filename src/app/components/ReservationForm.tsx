@@ -6,6 +6,7 @@ import { useReservation } from "./ReservationContext";
 import SubmitButton from "./SubmitButton";
 import type { Cabin } from "../lib/data-service";
 import type { Session } from "next-auth";
+import Image from "next/image";
 
 type ReservationFormProps = { cabin: Cabin; user: { name?: string | null; image?: string | null } };
 
@@ -15,6 +16,11 @@ function ReservationForm({ cabin, user }: ReservationFormProps) {
   const startDate = range.from;
   const endDate = range.to;
 
+  // Only proceed if both dates are defined
+  if (!startDate || !endDate) {
+    return null;
+  }
+
   const numNights = differenceInDays(endDate, startDate);
 
   // Only hide the submit button if dates are invalid, keep the form always visible
@@ -23,8 +29,8 @@ function ReservationForm({ cabin, user }: ReservationFormProps) {
   const cabinPrice = numNights * (regularPrice - discount);
 
   const bookingData = {
-    startDate,
-    endDate,
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
     numNights,
     cabinPrice,
     cabinId: id,
@@ -39,12 +45,16 @@ function ReservationForm({ cabin, user }: ReservationFormProps) {
         <p>Logged in as</p>
 
         <div className="flex gap-4 items-center">
-          <img
-            referrerPolicy="no-referrer"
-            className="h-8 rounded-full"
-            src={user.image}
-            alt={user.name}
-          />
+          {user.image && (
+            <Image
+              referrerPolicy="no-referrer"
+              className="h-8 w-8 rounded-full"
+              width={32}
+              height={32}
+              src={user.image}
+              alt={user.name || 'User avatar'}
+            />
+          )}
           <p>{user.name}</p>
         </div>
       </div>

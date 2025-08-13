@@ -4,9 +4,9 @@ import { getCabin, getBookedDatesByCabinId } from "../../../lib/data-service";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { cabinId: string } }
+  { params }: { params: Promise<{ cabinId: string }> }
 ) {
-  const { cabinId } = params;
+  const { cabinId } = await params;
   try {
     const [cabin, bookedDates] = await Promise.all([
       getCabin(cabinId),

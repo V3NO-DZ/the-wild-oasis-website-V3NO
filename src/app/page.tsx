@@ -1,8 +1,9 @@
+import React from "react";
 import Image from "next/image";
 import bg from "../../public/bg.png";
 import Link from "next/link";
 
-export default function Page(): JSX.Element {
+export default function Page(): React.JSX.Element {
   return (
     <main className="mt-24">
       <Image

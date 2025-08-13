@@ -7,7 +7,9 @@ import { authConfig } from "../lib/auth";
 import type { Cabin as CabinType } from "../lib/data-service";
 import type { Session } from "next-auth";
 
-type ReservationProps = { cabin: CabinType & { description?: string } };
+type ReservationProps = {
+  cabin: CabinType & { description?: string };
+};
 
 async function Reservation({ cabin }: ReservationProps) {
   const session = await getServerSession(authConfig);
@@ -15,6 +17,7 @@ async function Reservation({ cabin }: ReservationProps) {
     getSettings(),
     getBookedDatesByCabinId(cabin.id),
   ]);
+
   return (
     <div className="grid grid-cols-2 border border-blue-800 min-h-[400px]">
       <DateSelector

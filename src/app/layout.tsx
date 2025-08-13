@@ -1,3 +1,4 @@
+import React from "react";
 import Header from "./components/Header";
 import "@/app/styles/globals.css";
 import { Josefin_Sans } from "next/font/google";
@@ -17,7 +18,7 @@ type RootLayoutProps = {
   children: React.ReactNode;
 };
 
-export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
+export default function RootLayout({ children }: RootLayoutProps): React.JSX.Element {
   return (
     <html lang="en">
       <body

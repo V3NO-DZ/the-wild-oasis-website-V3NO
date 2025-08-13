@@ -31,6 +31,9 @@ export type Guest = {
   id?: number;
   email: string;
   fullName: string;
+  nationality?: string;
+  countryFlag?: string;
+  nationalID?: string;
   [key: string]: unknown;
 };
 
@@ -190,7 +193,12 @@ export async function getBookedDatesByCabinId(
   return bookedDates as Date[];
 }
 
-export async function getSettings(): Promise<Record<string, unknown>> {
+export type Settings = {
+  minBookingLength: number;
+  maxBookingLength: number;
+};
+
+export async function getSettings(): Promise<Settings> {
   const { data, error } = await supabaseAdmin
     .from("settings")
     .select("*")
@@ -203,7 +211,7 @@ export async function getSettings(): Promise<Record<string, unknown>> {
     throw new Error("Settings could not be loaded");
   }
 
-  return (data ?? {}) as Record<string, unknown>;
+  return data as Settings;
 }
 
 export async function getCountries(): Promise<

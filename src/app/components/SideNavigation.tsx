@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import {
   CalendarDaysIcon,
   HomeIcon,
@@ -8,7 +9,7 @@ import SignOutButton from "./SignOutButton";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const navLinks: Array<{ name: string; href: string; icon: JSX.Element }> = [
+const navLinks: Array<{ name: string; href: string; icon: React.JSX.Element }> = [
   {
     name: "Home",
     href: "/account",
@@ -26,7 +27,7 @@ const navLinks: Array<{ name: string; href: string; icon: JSX.Element }> = [
   },
 ];
 
-function SideNavigation(): JSX.Element {
+function SideNavigation(): React.JSX.Element {
   const pathname = usePathname();
   return (
     <nav className="border-r border-primary-900">

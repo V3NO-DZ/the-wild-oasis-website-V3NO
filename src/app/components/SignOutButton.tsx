@@ -1,9 +1,10 @@
 "use client";
 
+import React from "react";
 import { signOut } from "next-auth/react";
 import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/solid";
 
-function SignOutButton(): JSX.Element {
+function SignOutButton(): React.JSX.Element {
   return (
     <button
       onClick={() => signOut({ callbackUrl: "/" })}

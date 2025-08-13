@@ -1,10 +1,17 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import { updateGuest } from "../lib/action";
 import SubmitButton from "./SubmitButton";
+import type { Guest } from "../lib/data-service";
 
-function UpdateProfileForm({ children, guest }) {
+type UpdateProfileFormProps = {
+  children: React.ReactNode;
+  guest: Guest;
+};
+
+function UpdateProfileForm({ children, guest }: UpdateProfileFormProps) {
   const { fullName, email, countryFlag, nationalID } = guest;
 
   return (
@@ -41,12 +48,14 @@ function UpdateProfileForm({ children, guest }) {
         <div className="flex items-center justify-between">
           <label htmlFor="nationality">Where are you from?</label>
           <div className="relative h-5 w-8">
-            <Image
-              src={countryFlag}
-              alt="flag name"
-              fill
-              className="object-contain rounded-sm"
-            />
+            {countryFlag && (
+              <Image
+                src={countryFlag}
+                alt="flag name"
+                fill
+                className="object-contain rounded-sm"
+              />
+            )}
           </div>
         </div>
         {children}
@@ -70,7 +79,5 @@ function UpdateProfileForm({ children, guest }) {
     </form>
   );
 }
-
-
 
 export default UpdateProfileForm;

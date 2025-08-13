@@ -6,8 +6,8 @@ type Params = {
   bookingId: string;
 };
 
-export default async function Page({ params }: { params: Params }): Promise<React.JSX.Element> {
-  const { bookingId } = params;
+export default async function Page({ params }: { params: Promise<Params> }): Promise<React.JSX.Element> {
+  const { bookingId } = await params;
 
   // 1. Fetch the entire booking object first
   // This object should contain the cabinId associated with the booking
@@ -53,7 +53,7 @@ export default async function Page({ params }: { params: Params }): Promise<Reac
           </label>
           <textarea
             name="observations"
-            defaultValue={observations}
+            defaultValue={(observations as string) || ''}
             className="px-5 py-3 bg-orange-200 text-orange-800 w-full shadow-sm rounded-sm"
             aria-label="Observations about your stay"
             placeholder="Any special requirements, allergies, or notes..."

@@ -24,7 +24,13 @@ export default async function Page({
 }: PageProps): Promise<React.JSX.Element> {
   // ✅ Await searchParams before accessing its properties
   const params = await searchParams; // added this line
-  const filter = params.capacity ?? "all"; // changed from searchParams.capacity to params.capacity
+
+  // ✅ Validate and type the filter parameter
+  const capacity = params.capacity;
+  const filter: "all" | "small" | "medium" | "large" =
+    capacity === "small" || capacity === "medium" || capacity === "large"
+      ? capacity
+      : "all";
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-12">

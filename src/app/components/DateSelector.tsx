@@ -6,19 +6,15 @@ import { useReservation } from "./ReservationContext";
 import { DayPicker } from "react-day-picker";
 import { useState } from "react";
 import type { DateRange } from "./ReservationContext";
-import type { Cabin } from "../lib/data-service";
+import type { Cabin, Settings } from "../lib/data-service";
 
 function isAlreadyBooked(range: DateRange, datesArr: Date[]) {
-  return (
-    range?.from &&
-    range?.to &&
-    datesArr.some((date) =>
-      isWithinInterval(date, { start: range.from, end: range.to })
-    )
+  if (!range?.from || !range?.to) return false;
+
+  return datesArr.some((date) =>
+    isWithinInterval(date, { start: range.from!, end: range.to! })
   );
 }
-
-type Settings = { minBookingLength: number; maxBookingLength: number };
 
 function DateSelector({ settings, cabin, bookedDates }: { settings: Settings; cabin: Cabin; bookedDates: Date[] }) {
   const { range, setRange, resetRange } = useReservation();
@@ -45,7 +41,7 @@ function DateSelector({ settings, cabin, bookedDates }: { settings: Settings; ca
       <DayPicker
         className="place-self-center"
         mode="range"
-        selected={displayRange}
+        selected={displayRange as any}
         numberOfMonths={2}
         fromMonth={new Date()}
         fromDate={new Date()}

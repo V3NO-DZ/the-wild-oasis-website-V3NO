@@ -13,6 +13,10 @@ export default async function Page(): Promise<React.JSX.Element> {
     redirect("/login"); // ✅ send user to your custom sign-in page
   }
 
+  if (!session.user) {
+    redirect("/login");
+  }
+
   return (
     <h2 className="font-semibold text-2xl text-accent-400 mb-7">
       Welcome {session.user.name}

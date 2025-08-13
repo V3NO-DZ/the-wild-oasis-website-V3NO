@@ -1,6 +1,7 @@
+import React from "react";
 import Link from "next/link";
 
-function LoginMessage(): JSX.Element {
+function LoginMessage(): React.JSX.Element {
   return (
     <div className=" grid bg-primary-800 ">
       <p className=" text-center  text-xl py-12 self-center">
