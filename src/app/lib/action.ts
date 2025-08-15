@@ -2,10 +2,19 @@
 
 import { getServerSession } from "next-auth";
 import { authConfig } from "./auth";
-import { supabaseAdmin } from "./supabase";
+import { PrismaClient } from "../../../generated/prisma";
 import { revalidatePath } from "next/cache";
 import { getBookings } from "./data-service";
 import { redirect } from "next/navigation";
+
+let prisma: PrismaClient;
+
+try {
+  prisma = new PrismaClient();
+} catch (error) {
+  console.error("Failed to initialize Prisma client:", error);
+  throw new Error("Database connection failed");
+}
 
 export async function updateGuest(formData: FormData): Promise<void> {
   console.log(formData);
@@ -19,14 +28,15 @@ export async function updateGuest(formData: FormData): Promise<void> {
     throw new Error("Please provide a valid national ID");
 
   const updateData = { nationality, countryFlag, nationalID };
-  const { data, error } = await supabaseAdmin
-    .from("guests")
-    .update(updateData)
-    .eq("id", (session.user as any).guestId)
-    .select()
-    .single();
 
-  if (error) throw new Error("Guest could not be updated");
+  try {
+    await prisma.guest.update({
+      where: { id: (session.user as any).guestId },
+      data: updateData,
+    });
+  } catch (error) {
+    throw new Error("Guest could not be updated");
+  }
 
   revalidatePath("/account");
 }
@@ -41,14 +51,14 @@ export async function deleteReservation(bookingId: number): Promise<void> {
   if (!guestBookingsId.includes(bookingId))
     throw new Error("you are not allowed to delete this booking");
 
-  const { error } = await supabaseAdmin
-    .from("bookings")
-    .delete()
-    .eq("id", bookingId);
-
-  if (error) {
+  try {
+    await prisma.booking.delete({
+      where: { id: bookingId },
+    });
+  } catch (error) {
     throw new Error("Booking could not be deleted");
   }
+
   revalidatePath("/account/reservations");
 }
 
@@ -67,10 +77,42 @@ export async function createBooking(
   const session = await getServerSession(authConfig);
   if (!session) throw new Error("you must be logged in ");
 
+  // Test database connection
+  try {
+    await prisma.$connect();
+  } catch (connectionError) {
+    throw new Error("Unable to connect to database");
+  }
+
+  // Validate required data
+  if (!bookingData.cabinId || !bookingData.startDate || !bookingData.endDate) {
+    throw new Error("Missing required booking information");
+  }
+
+  // Parse and validate dates
+  const startDate = new Date(bookingData.startDate + "T00:00:00");
+  const endDate = new Date(bookingData.endDate + "T00:00:00");
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    throw new Error("Invalid date format");
+  }
+
+  if (startDate >= endDate) {
+    throw new Error("Start date must be before end date");
+  }
+
+  const numGuests = Number(formData.get("numGuests") ?? 0);
+  if (numGuests <= 0) {
+    throw new Error("Number of guests must be greater than 0");
+  }
+
   const newBooking = {
-    ...bookingData,
+    cabinId: bookingData.cabinId,
     guestId: (session.user as any).guestId,
-    numGuests: Number(formData.get("numGuests") ?? 0),
+    startDate: startDate,
+    endDate: endDate,
+    numNights: bookingData.numNights,
+    numGuests: numGuests,
     observations: String(formData.get("observations") ?? "").slice(0, 1000),
     extrasPrice: 0,
     totalPrice: bookingData.cabinPrice,
@@ -79,10 +121,24 @@ export async function createBooking(
     status: "unconfirmed",
   };
 
-  const { error } = await supabaseAdmin.from("bookings").insert([newBooking]);
+  // Additional validation
+  if (
+    !newBooking.guestId ||
+    !newBooking.cabinId ||
+    newBooking.totalPrice <= 0
+  ) {
+    throw new Error("Invalid booking data");
+  }
 
-  if (error) {
-    throw new Error("Booking could not be created");
+  try {
+    const result = await prisma.booking.create({
+      data: newBooking,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Booking could not be created: ${error.message}`);
+    }
+    throw new Error("Booking could not be created due to a database error");
   }
 
   revalidatePath(`/cabins/${bookingData.cabinId}`);
@@ -107,16 +163,15 @@ export async function updateReservation(formData: FormData): Promise<void> {
     observations: String(formData.get("observations") ?? "").slice(0, 100),
   };
 
-  const { error } = await supabaseAdmin
-    .from("bookings")
-    .update(updateData)
-    .eq("id", bookingId)
-    .select()
-    .single();
-
-  if (error) {
+  try {
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: updateData,
+    });
+  } catch (error) {
     throw new Error("Booking could not be updated");
   }
+
   revalidatePath(`/account/reservations/edit/${bookingId}`);
 
   redirect("/account/reservations");

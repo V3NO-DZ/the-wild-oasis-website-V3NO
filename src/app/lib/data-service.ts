@@ -1,6 +1,8 @@
 import { eachDayOfInterval } from "date-fns";
-import { supabaseAdmin } from "./supabase";
+import { PrismaClient } from "../../../generated/prisma";
 import { notFound } from "next/navigation";
+
+const prisma = new PrismaClient();
 
 export type Cabin = {
   id: number;
@@ -9,22 +11,27 @@ export type Cabin = {
   regularPrice: number;
   discount: number;
   image: string;
-  // Allow extra fields from SELECT * when needed
-  [key: string]: unknown;
+  description?: string | null;
+  created_at?: Date;
+  updated_at?: Date;
 };
 
 export type Booking = {
   id: number;
-  created_at: string;
-  startDate: string;
-  endDate: string;
+  created_at: Date;
+  startDate: Date;
+  endDate: Date;
   numNights: number;
   numGuests: number;
   totalPrice: number;
   guestId: number;
   cabinId: number;
-  cabins?: { name: string; image: string } | null;
-  [key: string]: unknown;
+  observations?: string | null;
+  extrasPrice: number;
+  isPaid: boolean;
+  hasBreakfast: boolean;
+  status: string;
+  cabin?: { name: string; image: string } | null;
 };
 
 export type Guest = {
@@ -34,184 +41,221 @@ export type Guest = {
   nationality?: string;
   countryFlag?: string;
   nationalID?: string;
-  [key: string]: unknown;
+  created_at?: Date;
+  updated_at?: Date;
 };
 
 // GET
 
 export async function getCabin(id: string | number): Promise<Cabin> {
-  const { data, error } = await supabaseAdmin
-    .from("cabins")
-    .select("*")
-    .eq("id", id)
-    .single();
+  try {
+    const cabin = await prisma.cabin.findUnique({
+      where: { id: Number(id) },
+    });
 
-  if (error) {
+    if (!cabin) {
+      notFound();
+    }
+
+    return cabin;
+  } catch (error) {
     console.error(error);
     notFound();
   }
-
-  return data as Cabin;
 }
 
 export type CabinPrice = { regularPrice: number; discount: number };
 export async function getCabinPrice(
   id: string | number
 ): Promise<CabinPrice | null> {
-  const { data, error } = await supabaseAdmin
-    .from("cabins")
-    .select("regularPrice, discount")
-    .eq("id", id)
-    .single();
+  try {
+    const cabin = await prisma.cabin.findUnique({
+      where: { id: Number(id) },
+      select: { regularPrice: true, discount: true },
+    });
 
-  if (error) {
+    return cabin;
+  } catch (error) {
     console.error(error);
+    return null;
   }
-
-  return (data ?? null) as CabinPrice | null;
 }
 
 export const getCabins = async function (): Promise<Cabin[]> {
-  const { data, error } = await supabaseAdmin
-    .from("cabins")
-    .select("id, name, maxCapacity, regularPrice, discount, image")
-    .order("name");
+  try {
+    const cabins = await prisma.cabin.findMany({
+      select: {
+        id: true,
+        name: true,
+        maxCapacity: true,
+        regularPrice: true,
+        discount: true,
+        image: true,
+      },
+      orderBy: { name: "asc" },
+    });
 
-  if (error) {
+    return cabins;
+  } catch (error) {
     console.error(error);
     throw new Error("Cabins could not be loaded");
   }
-
-  return (data ?? []) as Cabin[];
 };
 
 // Guests are uniquely identified by their email address
 export async function getGuest(email: string): Promise<Guest | null> {
-  const { data, error } = await supabaseAdmin
-    .from("guests")
-    .select("*")
-    .eq("email", email)
-    .single();
+  try {
+    const guest = await prisma.guest.findUnique({
+      where: { email },
+    });
 
-  // No error here! We handle the possibility of no guest in the sign in callback
-  return (data ?? null) as Guest | null;
+    // No error here! We handle the possibility of no guest in the sign in callback
+    return guest;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
 }
 
 // CREATE
 
-export async function createGuest(newGuest: Guest): Promise<unknown> {
-  const { data, error } = await supabaseAdmin.from("guests").insert([newGuest]);
+export async function createGuest(newGuest: Guest): Promise<Guest> {
+  try {
+    const guest = await prisma.guest.create({
+      data: newGuest,
+    });
 
-  if (error) {
+    return guest;
+  } catch (error) {
     console.error(error);
     throw new Error("Guest could not be created");
   }
-
-  return data as unknown;
 }
 
 export async function getBooking(id: number): Promise<Booking> {
-  const { data, error, count } = await supabaseAdmin
-    .from("bookings")
-    .select("*")
-    .eq("id", id)
-    .single();
+  try {
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+    });
 
-  if (error) {
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+
+    return booking;
+  } catch (error) {
     console.error(error);
     throw new Error("Booking could not get loaded");
   }
-
-  return data as Booking;
 }
+
 export async function updateBooking(
   id: number,
-  updatedFields: Partial<Booking>
+  updatedFields: Partial<Omit<Booking, "id" | "created_at" | "cabin">>
 ): Promise<Booking> {
-  const { data, error } = await supabaseAdmin
-    .from("bookings")
-    .update(updatedFields)
-    .eq("id", id)
-    .select()
-    .single();
+  try {
+    const booking = await prisma.booking.update({
+      where: { id },
+      data: updatedFields,
+    });
 
-  if (error) {
+    return booking;
+  } catch (error) {
     console.error(error);
     throw new Error("Booking could not be updated");
   }
-  return data as Booking;
 }
 
 export async function getBookings(guestId: number): Promise<Booking[]> {
-  const { data, error, count } = await supabaseAdmin
-    .from("bookings")
-    // We actually also need data on the cabins as well. But let's ONLY take the data that we actually need, in order to reduce downloaded data.
-    .select(
-      "id, created_at, startDate, endDate, numNights, numGuests, totalPrice, guestId, cabinId, cabins(name, image)"
-    )
-    .eq("guestId", guestId)
-    .order("startDate");
+  try {
+    const bookings = await prisma.booking.findMany({
+      where: { guestId },
+      select: {
+        id: true,
+        created_at: true,
+        startDate: true,
+        endDate: true,
+        numNights: true,
+        numGuests: true,
+        totalPrice: true,
+        guestId: true,
+        cabinId: true,
+        cabin: {
+          select: {
+            name: true,
+            image: true,
+          },
+        },
+      },
+      orderBy: { startDate: "asc" },
+    });
 
-  if (error) {
+    return bookings as Booking[];
+  } catch (error) {
     console.error(error);
     throw new Error("Bookings could not get loaded");
   }
-
-  // Supabase may return nested arrays for relations; coerce safely to our expected shape
-  return (data ?? []) as unknown as Booking[];
 }
 
 export async function getBookedDatesByCabinId(
   cabinId: number | string
 ): Promise<Date[]> {
-  const todayDate = new Date();
-  todayDate.setUTCHours(0, 0, 0, 0);
-  const todayIso = todayDate.toISOString();
+  try {
+    const todayDate = new Date();
+    todayDate.setUTCHours(0, 0, 0, 0);
 
-  // Getting all bookings
-  const { data, error } = await supabaseAdmin
-    .from("bookings")
-    .select("*")
-    .eq("cabinId", cabinId)
-    .or(`startDate.gte.${todayIso},status.eq.checked-in`);
+    // Getting all bookings
+    const bookings = await prisma.booking.findMany({
+      where: {
+        cabinId: Number(cabinId),
+        OR: [{ startDate: { gte: todayDate } }, { status: "checked-in" }],
+      },
+      select: {
+        startDate: true,
+        endDate: true,
+      },
+    });
 
-  if (error) {
+    // Converting to actual dates to be displayed in the date picker
+    const bookedDates = bookings
+      .map((booking) => {
+        return eachDayOfInterval({
+          start: new Date(booking.startDate),
+          end: new Date(booking.endDate),
+        });
+      })
+      .flat();
+
+    return bookedDates;
+  } catch (error) {
     console.error(error);
     throw new Error("Bookings could not get loaded");
   }
-
-  // Converting to actual dates to be displayed in the date picker
-  const bookedDates = data
-    .map((booking) => {
-      return eachDayOfInterval({
-        start: new Date(booking.startDate),
-        end: new Date(booking.endDate),
-      });
-    })
-    .flat();
-
-  return bookedDates as Date[];
 }
 
 export type Settings = {
+  id: number;
   minBookingLength: number;
   maxBookingLength: number;
+  maxGuestsPerBooking: number;
+  breakfastPrice: number;
+  created_at: Date;
+  updated_at: Date;
 };
 
 export async function getSettings(): Promise<Settings> {
-  const { data, error } = await supabaseAdmin
-    .from("settings")
-    .select("*")
-    .single();
+  try {
+    const settings = await prisma.settings.findFirst();
 
-  // await new Promise((res) => setTimeout(res, 5000));
+    if (!settings) {
+      throw new Error("Settings not found");
+    }
 
-  if (error) {
+    return settings;
+  } catch (error) {
     console.error(error);
     throw new Error("Settings could not be loaded");
   }
-
-  return data as Settings;
 }
 
 export async function getCountries(): Promise<
@@ -234,51 +278,44 @@ export async function getCountries(): Promise<
 /////////////
 
 // export async function createBooking(newBooking) {
-//   const { data, error } = await supabaseAdmin
-//     .from("bookings")
-//     .insert([newBooking])
-//     // So that the newly created object gets returned!
-//     .select()
-//     .single();
-
-//   if (error) {
+//   try {
+//     const booking = await prisma.booking.create({
+//       data: newBooking
+//     });
+//     return booking;
+//   } catch (error) {
 //     console.error(error);
 //     throw new Error("Booking could not be created");
 //   }
-
-//   return data;
 // }
 
 /////////////
 // UPDATE
 
 // export async function updateGuest(id, updatedFields) {
-//   const { data, error } = await supabaseAdmin
-//     .from("guests")
-//     .update(updatedFields)
-//     .eq("id", id)
-//     .select()
-//     .single();
-
-//   if (error) {
+//   try {
+//     const guest = await prisma.guest.update({
+//       where: { id },
+//       data: updatedFields
+//     });
+//     return guest;
+//   } catch (error) {
 //     console.error(error);
 //     throw new Error("Guest could not be updated");
 //   }
-//   return data;
 // }
 
 /////////////
 // DELETE
 
 // export async function deleteBooking(id) {
-//   const { data, error } = await supabaseAdmin
-//     .from("bookings")
-//     .delete()
-//     .eq("id", id);
-
-//   if (error) {
+//   try {
+//     const booking = await prisma.booking.delete({
+//       where: { id }
+//     });
+//     return booking;
+//   } catch (error) {
 //     console.error(error);
 //     throw new Error("Booking could not be deleted");
 //   }
-//   return data;
 // }

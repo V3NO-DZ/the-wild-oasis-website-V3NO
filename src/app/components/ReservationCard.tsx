@@ -1,12 +1,12 @@
 import { PencilSquareIcon } from '@heroicons/react/24/solid';
-import { format, formatDistance, isPast, isToday, parseISO } from 'date-fns';
+import { format, formatDistance, isPast, isToday } from 'date-fns';
 import DeleteReservation from './DeleteReservation';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Booking } from '@/app/lib/data-service';
 
-export const formatDistanceFromNow = (dateStr: string) =>
-  formatDistance(parseISO(dateStr), new Date(), {
+export const formatDistanceFromNow = (date: Date) =>
+  formatDistance(date, new Date(), {
     addSuffix: true,
   }).replace('about ', '');
 
@@ -23,12 +23,12 @@ function ReservationCard({ booking }: ReservationCardProps) {
     numGuests,
     status,
     created_at,
-    cabins,
+    cabin,
   } = booking;
 
-  if (!cabins) return null;
+  if (!cabin) return null;
 
-  const { name, image } = cabins;
+  const { name, image } = cabin;
 
   return (
     <div className='flex border border-primary-800'>
@@ -58,11 +58,11 @@ function ReservationCard({ booking }: ReservationCardProps) {
         </div>
 
         <p className='text-lg text-primary-300'>
-          {format(new Date(startDate), 'EEE, MMM dd yyyy')} (
-          {isToday(new Date(startDate))
+          {format(startDate, 'EEE, MMM dd yyyy')} (
+          {isToday(startDate)
             ? 'Today'
             : formatDistanceFromNow(startDate)}
-          ) &mdash; {format(new Date(endDate), 'EEE, MMM dd yyyy')}
+          ) &mdash; {format(endDate, 'EEE, MMM dd yyyy')}
         </p>
 
         <div className='flex gap-5 mt-auto items-baseline'>
@@ -72,13 +72,13 @@ function ReservationCard({ booking }: ReservationCardProps) {
             {numGuests} guest{numGuests > 1 && 's'}
           </p>
           <p className='ml-auto text-sm text-primary-400'>
-            Booked {format(new Date(created_at), 'EEE, MMM dd yyyy, p')}
+            Booked {format(created_at, 'EEE, MMM dd yyyy, p')}
           </p>
         </div>
       </div>
 
       <div className='flex flex-col border-l border-primary-800 w-[100px]'>
-        {!isPast(startDate as unknown as Date) ? (
+        {!isPast(startDate) ? (
           <><Link
             href={`/account/reservations/edit/${id}`}
             className='group flex items-center gap-2 uppercase text-xs font-bold text-primary-300 border-b border-primary-800 flex-grow px-3 hover:bg-accent-600 transition-colors hover:text-primary-900'

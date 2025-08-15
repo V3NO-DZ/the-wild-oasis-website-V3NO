@@ -29,8 +29,8 @@ function ReservationForm({ cabin, user }: ReservationFormProps) {
   const cabinPrice = numNights * (regularPrice - discount);
 
   const bookingData = {
-    startDate: startDate.toISOString(),
-    endDate: endDate.toISOString(),
+    startDate: startDate.toLocaleDateString('en-CA'), // YYYY-MM-DD format
+    endDate: endDate.toLocaleDateString('en-CA'), // YYYY-MM-DD format
     numNights,
     cabinPrice,
     cabinId: id,
@@ -62,8 +62,20 @@ function ReservationForm({ cabin, user }: ReservationFormProps) {
       {/* Updated form background and text to match Cabin colors */}
       <form
         action={async (formData) => {
-          await createBookingWithData(formData);
-          resetRange();
+          try {
+            await createBookingWithData(formData);
+            resetRange();
+          } catch (error: any) {
+            // Only show alert for real errors, not NEXT_REDIRECT
+            if (error?.message !== "NEXT_REDIRECT") {
+              console.error("Booking creation failed:", error);
+              alert(
+                `Failed to create booking: ${error instanceof Error ? error.message : "Unknown error"
+                }`
+              );
+            }
+            // Otherwise, do nothing (redirect will happen)
+          }
         }}
         className="bg-blue-900 py-10 px-16 text-lg flex gap-5 flex-col text-blue-100"
       >
