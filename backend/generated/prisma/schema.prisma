@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cabin {
+  id           Int      @id @default(autoincrement())
+  name         String
+  maxCapacity  Int
+  regularPrice Int
+  discount     Int      @default(0)
+  image        String
+  description  String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  // Relations
+  bookings Booking[]
+
+  @@map("cabins")
+}
+
+model Guest {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  fullName   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  bookings Booking[]
+
+  @@map("guests")
+}
+
+model Booking {
+  id           Int      @id @default(autoincrement())
+  created_at   DateTime @default(now())
+  startDate    DateTime
+  endDate      DateTime
+  numNights    Int
+  numGuests    Int
+  totalPrice   Int
+  guestId      Int
+  cabinId      Int
+  observations String?  @db.VarChar(1000)
+  extrasPrice  Int      @default(0)
+  isPaid       Boolean  @default(false)
+  hasBreakfast Boolean  @default(false)
+  status       String   @default("unconfirmed") // unconfirmed, confirmed, checked-in, checked-out
+
+  // Relations
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  cabin Cabin @relation(fields: [cabinId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
+}
+
+model Settings {
+  id                  Int      @id @default(autoincrement())
+  minBookingLength    Int      @default(1)
+  maxBookingLength    Int      @default(30)
+  maxGuestsPerBooking Int      @default(10)
+  breakfastPrice      Int      @default(15)
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  @@map("settings")
+}
