@@ -34,3 +34,32 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Backend server
+
+### Development
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+### Caching with Redis
+
+- Create `backend/.env` with:
+
+```
+PORT=4000
+CORS_ORIGIN=http://localhost:3000
+REDIS_URL=redis://localhost:6379
+CABINS_CACHE_TTL_SECONDS=300
+```
+
+- Start Redis using Docker Compose from the project root:
+
+```bash
+docker compose up -d redis
+```
+
+`GET /api/cabins` is cached under the key `cabins:list` with the configured TTL.
