@@ -15,9 +15,9 @@ RUN npx prisma generate
 
 # Build the app
 FROM deps AS build
-COPY tsconfig.json ./
+COPY tsconfig.json nest-cli.json ./
 COPY src ./src
-COPY index.ts ./
+COPY main.ts ./
 RUN npm run build
 
 # Production runtime
@@ -35,6 +35,6 @@ COPY package.json ./package.json
 # Expose app port
 EXPOSE 4000
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/main.js"]
 
 

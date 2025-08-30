@@ -32,11 +32,14 @@ model Cabin {
 }
 
 model Guest {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique
-  fullName   String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  fullName    String
+  nationality String?
+  countryFlag String?
+  nationalID  String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   // Relations
   bookings Booking[]

@@ -175,7 +175,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "F:\\PROJECT\\the-wild-oasis-website\\backend\\generated\\prisma",
+      "value": "F:\\PROJECT\\the-wild-oasis-website-V3NO-nestjs\\backend\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -189,7 +189,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "F:\\PROJECT\\the-wild-oasis-website\\backend\\prisma\\schema.prisma",
+    "sourceFilePath": "F:\\PROJECT\\the-wild-oasis-website-V3NO-nestjs\\backend\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
